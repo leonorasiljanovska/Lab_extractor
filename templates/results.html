@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lab Results</title>
+</head>
+<body>
+    <h1>Extracted Lab Results</h1>
+
+    {% if results and results.metadata %}
+    <div>
+        <p><strong>Name:</strong> {{ results.metadata.name }}</p>
+        <p><strong>Doctor:</strong> {{ results.metadata.doctor }}</p>
+        <p><strong>Patient ID:</strong> {{ results.metadata.patient_id }}</p>
+        <p><strong>Date:</strong> {{ results.metadata.date }}</p>
+    </div>
+    <hr>
+    {% endif %}
+
+    {% if results and results.tests %}
+    <table border="1">
+        <thead>
+            <tr>
+                <th>Parameter</th>
+                <th>Value</th>
+                <th>Unit</th>
+                <th>Reference Range</th>
+                <th>Semantic Class</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for test in results.tests %}
+            <tr>
+                <td>{{ test.parameter }}</td>
+                <td>{{ test.value }}</td>
+                <td>{{ test.unit }}</td>
+                <td>{{ test.reference_min }} - {{ test.reference_max }}</td>
+                <td>
+                    {% if test.semantic_class and test.semantic_class.startswith("http") %}
+                        <a href="{{ test.semantic_class }}" target="_blank">LOINC Link</a>
+                    {% else %}
+                        {{ test.semantic_class }}
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No structured test results found.</p>
+    {% endif %}
+
+    <br>
+    <a href="/">Upload another file</a>
+</body>
+</html>

@@ -1,0 +1,31 @@
+### Health Check
+GET http://localhost:8000/
+Accept: application/json
+
+###
+
+### Health Check API
+GET http://localhost:8001/api/v1/health
+Accept: application/json
+
+###
+
+### Extract Lab Results - Using your image
+POST http://localhost:8001/api/v1/extract-lab-results
+Content-Type: multipart/form-data; boundary=boundary
+
+--boundary
+Content-Disposition: form-data; name="file"; filename="lab_report.jpg"
+Content-Type: image/jpeg
+
+< ./images/Health_lab_report_sample.png
+--boundary--
+
+### Extract Lab Results - Alternative (easier in PyCharm)
+POST http://localhost:8000/api/v1/extract-lab-results
+Content-Type: multipart/form-data
+
+# Just add your file parameter here - PyCharm will help you select the file
+# Click the "Add file" button when you run this request
+
+###
