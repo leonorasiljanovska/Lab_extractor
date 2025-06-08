@@ -26,10 +26,14 @@
 #     Health check endpoint
 #     """
 #     return {"status": "healthy", "message": "Lab Report Extractor API is running"}
+import os
 
 from fastapi import APIRouter, UploadFile, File, HTTPException
+from starlette.templating import Jinja2Templates
+
 from ..models import ExtractResponse, LaboratoryResults
 from ..utils import extract_lab_results
+
 
 router = APIRouter()
 

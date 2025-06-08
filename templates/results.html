@@ -2,54 +2,136 @@
 <html>
 <head>
     <title>Lab Results</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Extracted Lab Results</h1>
+<body class="bg-light text-dark py-4">
 
-    {% if results and results.metadata %}
-    <div>
-        <p><strong>Name:</strong> {{ results.metadata.name }}</p>
-        <p><strong>Doctor:</strong> {{ results.metadata.doctor }}</p>
-        <p><strong>Patient ID:</strong> {{ results.metadata.patient_id }}</p>
-        <p><strong>Date:</strong> {{ results.metadata.date }}</p>
+<div class="container">
+    <h1 class="mb-4 text-primary">Extracted Lab Results</h1>
+
+    {% if results %}
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Report Information</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <p><strong>Patient Name:</strong>
+                        {% if results.patient_name %}
+                            {{ results.patient_name }}
+                        {% else %}
+                            <span class="text-muted">Not found</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Doctor:</strong>
+                        {% if results.doctor_name %}
+                            {{ results.doctor_name }}
+                        {% else %}
+                            <span class="text-muted">Not found</span>
+                        {% endif %}
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Clinic/Laboratory:</strong>
+                        {% if results.clinic_name %}
+                            {{ results.clinic_name }}
+                        {% else %}
+                            <span class="text-muted">Not found</span>
+                        {% endif %}
+                    </p>
+                    <p><strong>Test Date:</strong>
+                        {% if results.test_date %}
+                            {{ results.test_date }}
+                        {% else %}
+                            <span class="text-muted">Not found</span>
+                        {% endif %}
+                    </p>
+                    {% if results.report_date %}
+                    <p><strong>Report Date:</strong> {{ results.report_date }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-    <hr>
     {% endif %}
 
     {% if results and results.tests %}
-    <table border="1">
-        <thead>
-            <tr>
-                <th>Parameter</th>
-                <th>Value</th>
-                <th>Unit</th>
-                <th>Reference Range</th>
-                <th>Semantic Class</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for test in results.tests %}
-            <tr>
-                <td>{{ test.parameter }}</td>
-                <td>{{ test.value }}</td>
-                <td>{{ test.unit }}</td>
-                <td>{{ test.reference_min }} - {{ test.reference_max }}</td>
-                <td>
-                    {% if test.semantic_class and test.semantic_class.startswith("http") %}
-                        <a href="{{ test.semantic_class }}" target="_blank">LOINC Link</a>
-                    {% else %}
-                        {{ test.semantic_class }}
-                    {% endif %}
-                </td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">Laboratory Test Results</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped mb-0">
+                    <thead class="table-success">
+                        <tr>
+                            <th>Parameter</th>
+                            <th>Value</th>
+                            <th>Unit</th>
+                            <th>Reference Range</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for test in results.tests %}
+                        <tr>
+                            <td><strong>{{ test.parameter }}</strong></td>
+                            <td>{{ test.value if test.value is not none else 'N/A' }}</td>
+                            <td>{{ test.unit if test.unit else '-' }}</td>
+                            <td>
+                                {% if test.reference_range %}
+                                    {{ test.reference_range }}
+                                {% elif test.reference_min is not none and test.reference_max is not none %}
+                                    {{ test.reference_min }} - {{ test.reference_max }}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if test.status %}
+                                    {% if test.status.lower() == 'normal' %}
+                                        <span class="badge bg-success">{{ test.status }}</span>
+                                    {% elif test.status.lower() == 'high' %}
+                                        <span class="badge bg-danger">{{ test.status }}</span>
+                                    {% elif test.status.lower() == 'low' %}
+                                        <span class="badge bg-warning text-dark">{{ test.status }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ test.status }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">Unknown</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
     {% else %}
-    <p>No structured test results found.</p>
+    <div class="alert alert-warning" role="alert">
+        <h4 class="alert-heading">No Test Results Found</h4>
+        <p>No structured test results could be extracted from the uploaded image. This could be due to:</p>
+        <ul>
+            <li>Poor image quality or resolution</li>
+            <li>Unclear or handwritten text</li>
+            <li>Non-standard lab report format</li>
+            <li>Image doesn't contain lab test data</li>
+        </ul>
+        <hr>
+        <p class="mb-0">Please try uploading a clearer image or a different lab report.</p>
+    </div>
     {% endif %}
 
-    <br>
-    <a href="/">Upload another file</a>
+    <div class="mt-4 text-center">
+        <a href="/" class="btn btn-primary btn-lg">
+            <i class="fas fa-upload"></i> Upload Another Report
+        </a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

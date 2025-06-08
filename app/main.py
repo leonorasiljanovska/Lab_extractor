@@ -1,16 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-
-from app.routers import main as api_router
-from app.routers import views as html_router
-
+from app.core.templates import templates
 
 from dotenv import load_dotenv
 import os
 
 load_dotenv()  # Load variables from .env
 groq_api_key = os.getenv("GROQ_API_KEY")
+
 
 app = FastAPI(
     title="Lab Report Extractor API",
@@ -25,6 +23,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# import your routers here *after* templates is set up
+from app.routers import views as html_router
+from app.routers import main as api_router
 
 # Include routers
 app.include_router(api_router.router, prefix="/api/v1", tags=["lab-extraction"])

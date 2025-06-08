@@ -1,103 +1,3 @@
-# import pytesseract
-# from PIL import Image
-# from io import BytesIO
-# import re
-#
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-#
-#
-# async def extract_lab_results(file):
-#     # Read file and convert to image
-#     contents = await file.read()
-#     image = Image.open(BytesIO(contents))
-#
-#     # Use Tesseract to extract raw text
-#     raw_text = pytesseract.image_to_string(image)
-#
-#     # Example parsing logic (you’ll need to adapt this to your actual reports)
-#     pattern = re.compile(
-#         r'(?P<parameter>[A-Za-z ]+):?\s*(?P<value>\d+\.?\d*)\s*(?P<unit>[a-zA-Z/%]+)?\s*\(?(?P<refmin>\d+\.?\d*)?-?(?P<refmax>\d+\.?\d*)?\)?')
-#
-#     tests = []
-#     for match in pattern.finditer(raw_text):
-#         parameter = match.group("parameter").strip()
-#         value = float(match.group("value"))
-#         unit = match.group("unit") or "unknown"
-#         ref_min = float(match.group("refmin")) if match.group("refmin") else None
-#         ref_max = float(match.group("refmax")) if match.group("refmax") else None
-#
-#         tests.append({
-#             "parameter": parameter,
-#             "value": value,
-#             "unit": unit,
-#             "reference_min": ref_min,
-#             "reference_max": ref_max,
-#             "semantic_class": None  # You can map this if you want using LOINC/SNOMED mappings
-#         })
-#
-#     return {
-#         "success": True,
-#         "results": {
-#             "tests": tests
-#         }
-#     }
-# import re
-# import pytesseract
-# from PIL import Image
-# from io import BytesIO
-#
-# from app.groq_client import analyze_text_with_groq
-#
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-#
-#
-# def try_float(val):
-#     try:
-#         return float(val)
-#     except:
-#         return None
-#
-#
-# def extract_range(tokens):
-#     pattern = re.compile(r'(\d+\.?\d*)\s*[-–]\s*(\d+\.?\d*)')
-#     text = ' '.join(tokens)
-#     match = pattern.search(text)
-#     if match:
-#         return float(match.group(1)), float(match.group(2))
-#     return None, None
-#
-#
-# def extract_metadata(raw_text):
-#     metadata = {}
-#
-#     patterns = {
-#         "name": r"(?:Name|Patient Name)[:\-]?\s*(\w+)",
-#         "doctor": r"(?:Doctor|Dr)[:\-]?\s*(\w+)",
-#         "patient_id": r"(?:ID|Patient ID)[:\-]?\s*(\w+)",
-#         "date": r"(?:Date)[:\-]?\s*([\d\/\-\.]+)"
-#     }
-#
-#     for key, pattern in patterns.items():
-#         match = re.search(pattern, raw_text, re.IGNORECASE)
-#         metadata[key] = match.group(1).strip() if match else "Not found"
-#
-#     return metadata
-#
-#
-# async def extract_lab_results(file):
-#     contents = await file.read()
-#     image = Image.open(BytesIO(contents))
-#     raw_text = pytesseract.image_to_string(image)
-#
-#     # Now use Groq to analyze
-#     structured_text = await analyze_text_with_groq(raw_text)
-#
-#     # Optionally convert Groq’s output to a JSON-friendly object if needed
-#     return {
-#         "success": True,
-#         "results": structured_text  # This might be a string, or parse to dict if Groq outputs JSON
-#     }
-
 import re
 import pytesseract
 from PIL import Image
@@ -178,18 +78,24 @@ async def extract_lab_results(file):
         # Use Groq to analyze and structure the text
         structured_data = await analyze_text_with_groq(raw_text)
 
-        if not structured_data or not structured_data.get("tests"):
+        if not structured_data:
             return {
                 "success": False,
-                "error": "No lab test data found in the extracted text",
+                "error": "Failed to analyze the extracted text",
                 "results": None
             }
 
-        # Convert to your expected format
+        # Convert to your expected format with additional fields
         lab_results = {
+            "patient_name": structured_data.get("patient_name"),
+            "doctor_name": structured_data.get("doctor_name"),
+            "clinic_name": structured_data.get("clinic_name"),
+            "test_date": structured_data.get("test_date"),
+            "report_date": structured_data.get("report_date"),
             "tests": []
         }
 
+        # Process test results
         for test in structured_data.get("tests", []):
             # Convert Groq format to your LaboratoryTest format
             lab_test = {
@@ -259,61 +165,61 @@ def parse_reference_range(range_str):
 
 # async def extract_lab_results(file):
 
-    # contents = await file.read()
-    # image = Image.open(BytesIO(contents))
-    #
-    # # Extract full raw text
-    # raw_text = pytesseract.image_to_string(image)
-    #
-    # # Extract metadata from full text
-    # metadata = extract_metadata(raw_text)
-    #
-    # # Structured data extraction
-    # data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-    # rows = []
-    # current_row = []
-    # last_top = None
-    #
-    # for i in range(len(data['text'])):
-    #     if int(data['conf'][i]) > 50:
-    #         word = data['text'][i].strip()
-    #         top = data['top'][i]
-    #
-    #         if last_top is None:
-    #             last_top = top
-    #
-    #         if abs(top - last_top) > 10:
-    #             if current_row:
-    #                 rows.append(current_row)
-    #             current_row = []
-    #             last_top = top
-    #
-    #         current_row.append(word)
-    #
-    # if current_row:
-    #     rows.append(current_row)
-    #
-    # test_results = []
-    # for row in rows:
-    #     if len(row) >= 4:
-    #         param = row[0]
-    #         value = try_float(row[1])
-    #         unit = row[-1]
-    #         ref_range = extract_range(row[2:-1])
-    #         if try_float(row[1]) is not None:  # Only accept valid numbers
-    #             test_results.append({
-    #                 "parameter": param,
-    #                 "value": value,
-    #                 "unit": unit,
-    #                 "reference_min": ref_range[0],
-    #                 "reference_max": ref_range[1],
-    #                 "semantic_class": None
-    #             })
-    #
-    # return {
-    #     "success": True,
-    #     "results": {
-    #         "metadata": metadata,
-    #         "tests": test_results
-    #     }
-    # }
+# contents = await file.read()
+# image = Image.open(BytesIO(contents))
+#
+# # Extract full raw text
+# raw_text = pytesseract.image_to_string(image)
+#
+# # Extract metadata from full text
+# metadata = extract_metadata(raw_text)
+#
+# # Structured data extraction
+# data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
+# rows = []
+# current_row = []
+# last_top = None
+#
+# for i in range(len(data['text'])):
+#     if int(data['conf'][i]) > 50:
+#         word = data['text'][i].strip()
+#         top = data['top'][i]
+#
+#         if last_top is None:
+#             last_top = top
+#
+#         if abs(top - last_top) > 10:
+#             if current_row:
+#                 rows.append(current_row)
+#             current_row = []
+#             last_top = top
+#
+#         current_row.append(word)
+#
+# if current_row:
+#     rows.append(current_row)
+#
+# test_results = []
+# for row in rows:
+#     if len(row) >= 4:
+#         param = row[0]
+#         value = try_float(row[1])
+#         unit = row[-1]
+#         ref_range = extract_range(row[2:-1])
+#         if try_float(row[1]) is not None:  # Only accept valid numbers
+#             test_results.append({
+#                 "parameter": param,
+#                 "value": value,
+#                 "unit": unit,
+#                 "reference_min": ref_range[0],
+#                 "reference_max": ref_range[1],
+#                 "semantic_class": None
+#             })
+#
+# return {
+#     "success": True,
+#     "results": {
+#         "metadata": metadata,
+#         "tests": test_results
+#     }
+# }
