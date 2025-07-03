@@ -9,6 +9,10 @@ import os
 load_dotenv()  # Load variables from .env
 groq_api_key = os.getenv("GROQ_API_KEY")
 
+from app.db import Base, engine
+from app import db_models
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Lab Report Extractor API",

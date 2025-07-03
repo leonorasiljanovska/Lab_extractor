@@ -9,6 +9,11 @@ from app.groq_client import analyze_text_with_groq
 # Set tesseract path (adjust for your system)
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
+import hashlib
+
+def generate_patient_id(name: str, surname: str) -> str:
+    full_str = f"{name.strip().lower()} {surname.strip().lower()}"
+    return hashlib.sha256(full_str.encode()).hexdigest()
 
 def preprocess_image(image):
     """Preprocess image for better OCR results"""
@@ -88,6 +93,7 @@ async def extract_lab_results(file):
         # Convert to your expected format with additional fields
         lab_results = {
             "patient_name": structured_data.get("patient_name"),
+            "gender": structured_data.get("gender"),
             "doctor_name": structured_data.get("doctor_name"),
             "clinic_name": structured_data.get("clinic_name"),
             "test_date": structured_data.get("test_date"),
@@ -162,64 +168,3 @@ def parse_reference_range(range_str):
             pass
 
     return None, None
-
-# async def extract_lab_results(file):
-
-# contents = await file.read()
-# image = Image.open(BytesIO(contents))
-#
-# # Extract full raw text
-# raw_text = pytesseract.image_to_string(image)
-#
-# # Extract metadata from full text
-# metadata = extract_metadata(raw_text)
-#
-# # Structured data extraction
-# data = pytesseract.image_to_data(image, output_type=pytesseract.Output.DICT)
-# rows = []
-# current_row = []
-# last_top = None
-#
-# for i in range(len(data['text'])):
-#     if int(data['conf'][i]) > 50:
-#         word = data['text'][i].strip()
-#         top = data['top'][i]
-#
-#         if last_top is None:
-#             last_top = top
-#
-#         if abs(top - last_top) > 10:
-#             if current_row:
-#                 rows.append(current_row)
-#             current_row = []
-#             last_top = top
-#
-#         current_row.append(word)
-#
-# if current_row:
-#     rows.append(current_row)
-#
-# test_results = []
-# for row in rows:
-#     if len(row) >= 4:
-#         param = row[0]
-#         value = try_float(row[1])
-#         unit = row[-1]
-#         ref_range = extract_range(row[2:-1])
-#         if try_float(row[1]) is not None:  # Only accept valid numbers
-#             test_results.append({
-#                 "parameter": param,
-#                 "value": value,
-#                 "unit": unit,
-#                 "reference_min": ref_range[0],
-#                 "reference_max": ref_range[1],
-#                 "semantic_class": None
-#             })
-#
-# return {
-#     "success": True,
-#     "results": {
-#         "metadata": metadata,
-#         "tests": test_results
-#     }
-# }

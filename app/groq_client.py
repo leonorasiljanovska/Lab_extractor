@@ -105,6 +105,7 @@ async def analyze_text_with_groq(text: str):
 Return ONLY valid JSON in this exact format:
 {
   "patient_name": "Patient Full Name",
+  "gender": "Male/Female or null if not found",
   "doctor_name": "Doctor Full Name", 
   "clinic_name": "Clinic/Hospital/Laboratory Name",
   "test_date": "Date of test (any format found)",
@@ -122,6 +123,7 @@ Return ONLY valid JSON in this exact format:
 
 Look for:
 - Patient name: often after "Patient:", "Name:", "Patient Name:", or at the top
+- Gender: look for labels like "Gender:", "Sex:", "Sex (M/F):", or near patient name
 - Doctor name: after "Dr.", "Doctor:", "Physician:", "Ordered by:", "Referring Physician:"
 - Clinic/Lab: letterhead, "Laboratory:", "Clinic:", "Hospital:", facility names
 - Dates: look for "Date:", "Test Date:", "Report Date:", "Collected:", any date format
