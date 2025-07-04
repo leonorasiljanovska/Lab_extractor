@@ -10,14 +10,6 @@ router = APIRouter()
 async def upload_page(request: Request):
     return templates.TemplateResponse("upload.html", {"request": request})
 
-
-# @router.post("/view-results", response_class=HTMLResponse)
-# async def show_results(request: Request, file: UploadFile = Form(...)):
-#     result = await extract_lab_results(file)
-#     return templates.TemplateResponse("results.html", {
-#         "request": request,
-#         "results": result["results"]
-#     })
 from app.utils import generate_patient_id
 
 

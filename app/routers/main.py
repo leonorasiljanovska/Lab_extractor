@@ -1,31 +1,3 @@
-# from fastapi import APIRouter, UploadFile, File, HTTPException
-# from ..models import ExtractResponse
-# from ..utils import extract_lab_results
-#
-# router = APIRouter()
-#
-#
-# @router.post("/extract-lab-results", response_model=ExtractResponse)
-# async def extract_laboratory_results(file: UploadFile = File(...)):
-#     """
-#     Extract laboratory results from an uploaded image file
-#     """
-#     # Validate file type
-#     if not file.content_type.startswith('image/'):
-#         raise HTTPException(status_code=400, detail="File must be an image")
-#
-#     # Extract results
-#     result = await extract_lab_results(file)
-#
-#     return ExtractResponse(**result)
-#
-#
-# @router.get("/health")
-# async def health_check():
-#     """
-#     Health check endpoint
-#     """
-#     return {"status": "healthy", "message": "Lab Report Extractor API is running"}
 import os
 from datetime import datetime
 
@@ -78,12 +50,19 @@ async def health_check():
 
 
 def parse_test_date(date_str: str):
-    for fmt in ("%Y-%m-%d %H:%M", "%Y-%m-%d"):
+    formats = [
+        "%Y-%m-%d %H:%M",   # 2022-05-07 10:30
+        "%Y-%m-%d",         # 2022-05-07
+        "%d-%b-%Y",         # 12-Aug-2014
+        "%d-%B-%Y",         # 12-August-2014 (in case full month name)
+    ]
+    for fmt in formats:
         try:
             return datetime.strptime(date_str, fmt)
         except ValueError:
             continue
-    return None  # or raise an error if you want strict validation
+    return None  # or raise an error for invalid format
+
 
 
 
@@ -140,8 +119,11 @@ async def save_edited_lab_results(
         db.commit()
         db.refresh(patient)
 
-    # Delete old tests for this patient
-    db.query(LabTest).filter(LabTest.patient_id == patient_id).delete()
+    db.query(LabTest).filter(
+        LabTest.patient_id == patient_id,
+        LabTest.test_date == test_date_obj
+    ).delete()
+
     db.commit()
 
     # Insert new test entries

@@ -16,7 +16,7 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Lab Report Extractor API",
-    description="API for extracting laboratory results from document images",
+    description="API for extracting laboratory results from document media",
     version="1.0.0"
 )
 
@@ -28,7 +28,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# import your routers here *after* templates is set up
 from app.routers import views as html_router
 from app.routers import main as api_router
 
@@ -36,5 +35,4 @@ from app.routers import main as api_router
 app.include_router(api_router.router, prefix="/api/v1", tags=["lab-extraction"])
 app.include_router(html_router.router)  # for HTML form + result rendering
 
-# Optional: static file mounting
-# app.mount("/static", StaticFiles(directory="static"), name="static")
+

@@ -6,14 +6,15 @@ import json
 
 from app.groq_client import analyze_text_with_groq
 
-# Set tesseract path (adjust for your system)
 pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
 
 import hashlib
 
+
 def generate_patient_id(name: str, surname: str) -> str:
     full_str = f"{name.strip().lower()} {surname.strip().lower()}"
     return hashlib.sha256(full_str.encode()).hexdigest()
+
 
 def preprocess_image(image):
     """Preprocess image for better OCR results"""
@@ -24,7 +25,7 @@ def preprocess_image(image):
     if image.mode != 'L':
         image = image.convert('L')
 
-    # Resize image if it's too small (OCR works better on larger images)
+    # Resize image if it's too small (OCR works better on larger media)
     width, height = image.size
     if width < 1000 or height < 1000:
         # Scale up by 2x if image is small

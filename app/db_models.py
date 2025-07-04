@@ -28,8 +28,6 @@ class LabTest(Base):
     parameter = Column(String)
     value = Column(Float, nullable=True)
     unit = Column(String, nullable=True)
-    reference_min = Column(Float, nullable=True)
-    reference_max = Column(Float, nullable=True)
     reference_range = Column(String, nullable=True)
     status = Column(String, nullable=True)
     test_date = Column(DateTime, nullable=False)

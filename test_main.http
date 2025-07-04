@@ -18,7 +18,7 @@ Content-Type: multipart/form-data; boundary=boundary
 Content-Disposition: form-data; name="file"; filename="lab_report.jpg"
 Content-Type: image/jpeg
 
-< ./images/Health_lab_report_sample.png
+< ./media/Health_lab_report_sample.png
 --boundary--
 
 ### Extract Lab Results - Alternative (easier in PyCharm)
